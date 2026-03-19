@@ -12,23 +12,28 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Overview
 
-**Patches**는 LinkedIn 관련 웹 애플리케이션 프로젝트입니다. 현재 초기 단계로, Next.js 기반의 기본 프로젝트 구조가 세팅되어 있습니다.
+**Patches**는 LinkedIn 관련 웹 애플리케이션 프로젝트입니다. 보드판을 겹치지 않는 직사각형 영역으로 나누는 퍼즐 게임인 **Shikaku(시카쿠)**를 기반으로 합니다.
+
+상세한 게임 규칙은 [game_rules.md](./docs/game_rules.md)를 참고하세요.
+
+현재 초기 단계로, Next.js 기반의 기본 프로젝트 구조가 세팅되어 있습니다.
 
 ## Tech Stack
 
-| Category       | Technology                         | Version   |
-| -------------- | ---------------------------------- | --------- |
-| Framework      | Next.js (App Router)               | 16.2.0    |
-| Language       | TypeScript                         | ^5        |
-| UI Library     | React                              | 19.2.4    |
-| Styling        | Tailwind CSS v4 (PostCSS 방식)     | ^4        |
-| Linting        | ESLint (Flat Config)               | ^9        |
-| Formatting     | Prettier                           | ^3.8.1    |
-| Package Manager| pnpm                               | 10.x      |
+| Category        | Technology                     | Version |
+| --------------- | ------------------------------ | ------- |
+| Framework       | Next.js (App Router)           | 16.2.0  |
+| Language        | TypeScript                     | ^5      |
+| UI Library      | React                          | 19.2.4  |
+| Styling         | Tailwind CSS v4 (PostCSS 방식) | ^4      |
+| Linting         | ESLint (Flat Config)           | ^9      |
+| Formatting      | Prettier                       | ^3.8.1  |
+| Package Manager | pnpm                           | 10.x    |
 
 ## Conventions
 
 ### Code Style
+
 - **Prettier**: `.prettierrc` 참고
   - 세미콜론 없음 (`semi: false`)
   - 싱글 쿼트 (`singleQuote: true`, `jsxSingleQuote: true`)
@@ -39,9 +44,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Auto Format on Save**: `.vscode/settings.json`에서 Prettier 자동 포맷 + import 자동 정리 설정
 
 ### Path Alias
+
 - `@/*` → 프로젝트 루트 (`./`) 기준 (tsconfig.json)
 
 ### Package Manager
+
 - **반드시 `pnpm`을 사용**할 것. `npm` 또는 `yarn` 사용 금지.
 
 ## Project Structure
