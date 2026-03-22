@@ -1,0 +1,15 @@
+6x6
+.a..b.
+..c...
+.....d
+e.....
+...f..
+.g..h.
+a:4:tall
+b:4:square
+c:4:square
+d:-:wide
+e:-:tall
+f:4:wide
+g:4:wide
+h:4:square

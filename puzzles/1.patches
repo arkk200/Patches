@@ -1,0 +1,11 @@
+5x5
+..a..
+.....
+b.c.d
+.....
+..e..
+a:5:wide
+b:8:tall
+c:2:tall
+d:4:square
+e:6:wide
