@@ -1,0 +1,24 @@
+[project]
+name = "patches-backend"
+version = "0.1.0"
+description = "Backend harness for Patches screenshot ingestion and review"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "sqlalchemy",
+  "pydantic",
+  "pydantic-settings",
+  "alembic",
+  "python-multipart",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "httpx",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
