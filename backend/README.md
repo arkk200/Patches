@@ -8,12 +8,15 @@
 
 백엔드는 아래 흐름을 담당합니다.
 
-1. 웹페이지에서 스크린샷과 퍼즐 번호(예: `22`) 업로드
-2. 원본 이미지와 번호 메타데이터 저장
-3. OCR/비전 파이프라인으로 퍼즐 draft 추출
+1. 웹페이지에서 스크린샷, 퍼즐 번호(예: `22`), 보드 너비/높이(예: `5x5`) 업로드
+2. 원본 이미지와 번호/보드 크기 메타데이터 저장
+3. CV 파이프라인으로 퍼즐 draft 추출
 4. 리뷰가 필요하면 리뷰 문서를 생성해 검수 대기 상태로 저장
 5. 리뷰 중간 산출물이 필요하면 `<번호>-<생성순번>.patches` 형식으로 임시 생성
 6. 검수 승인 후 최종 `.patches` 파일을 `<번호>.patches` 형식으로 저장
+
+보드 너비(`board_width`)와 높이(`board_height`)는 퍼즐 번호와 마찬가지로 **필수 입력값**으로 받는 것을 기준으로 합니다.
+CV는 이 입력값을 신뢰 가능한 기준으로 사용하고, 보드 위치 탐지와 셀 분할 정확도를 높이는 쪽에 집중합니다.
 
 ---
 
@@ -81,6 +84,8 @@ backend/
 review_id: rev_20260409_001
 upload_id: upl_20260409_001
 puzzle_number: "22"
+board_width: 5
+board_height: 5
 status: pending
 created_at: 2026-04-09T09:00:00Z
 image_path: backend/storage/uploads/upl_20260409_001.png
@@ -160,6 +165,8 @@ b.c.d
 |---|---|---|
 | id | text PK | 업로드 ID |
 | puzzle_number | integer | 웹페이지에서 입력받은 퍼즐 번호 |
+| board_width | integer | 웹페이지에서 필수로 입력받는 보드 너비 |
+| board_height | integer | 웹페이지에서 필수로 입력받는 보드 높이 |
 | original_filename | text | 원본 파일명 |
 | content_type | text | MIME type |
 | file_path | text | 저장 경로 |
@@ -172,6 +179,8 @@ b.c.d
 {
   "id": "upl_20260409_001",
   "puzzle_number": 22,
+  "board_width": 5,
+  "board_height": 5,
   "original_filename": "patches-screenshot.png",
   "content_type": "image/png",
   "file_path": "backend/storage/uploads/upl_20260409_001.png",
