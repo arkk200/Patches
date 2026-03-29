@@ -21,6 +21,8 @@ ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
 @router.post("", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
 def create_upload(
     puzzle_number: int = Form(..., ge=1),
+    board_width: int = Form(..., ge=1),
+    board_height: int = Form(..., ge=1),
     image: UploadFile = File(...),
     db: Session = Depends(get_db),
 ) -> UploadResponse:
@@ -42,6 +44,8 @@ def create_upload(
     upload = Upload(
         id=upload_id,
         puzzle_number=puzzle_number,
+        board_width=board_width,
+        board_height=board_height,
         original_filename=image.filename or f"{upload_id}{suffix}",
         content_type=image.content_type,
         file_path=file_path,
@@ -55,6 +59,8 @@ def create_upload(
     return UploadResponse(
         id=upload.id,
         puzzle_number=upload.puzzle_number,
+        board_width=upload.board_width,
+        board_height=upload.board_height,
         original_filename=upload.original_filename,
         content_type=upload.content_type,
         file_path=upload.file_path,

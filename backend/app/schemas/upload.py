@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 class UploadResponse(BaseModel):
     id: str
     puzzle_number: int = Field(ge=1)
+    board_width: int = Field(ge=1)
+    board_height: int = Field(ge=1)
     original_filename: str
     content_type: str
     file_path: str
