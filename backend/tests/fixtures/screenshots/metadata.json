@@ -1,0 +1,22 @@
+{
+  "screenshots": [
+    {
+      "file_name": "a.jpeg",
+      "puzzle_number": 1,
+      "board_width": 5,
+      "board_height": 5
+    },
+    {
+      "file_name": "b.png",
+      "puzzle_number": 2,
+      "board_width": 6,
+      "board_height": 6
+    },
+    {
+      "file_name": "c.png",
+      "puzzle_number": 3,
+      "board_width": 6,
+      "board_height": 6
+    }
+  ]
+}
