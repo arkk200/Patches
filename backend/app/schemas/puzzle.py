@@ -1,9 +1,6 @@
 from pydantic import BaseModel, Field
 
 
-ALLOWED_SHAPES = {"wide", "tall", "square", "any"}
-
-
 class PatchDefinition(BaseModel):
     id: str = Field(min_length=1, max_length=1)
     row: int = Field(ge=0)
@@ -18,8 +15,3 @@ class PuzzleDraft(BaseModel):
     board_rows: list[str]
     patches: list[PatchDefinition]
 
-
-class ValidationIssue(BaseModel):
-    code: str
-    message: str
-    field: str | None = None

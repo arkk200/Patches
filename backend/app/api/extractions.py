@@ -10,7 +10,7 @@ from app.config import settings
 from app.db import get_db
 from app.models.extraction_job import ExtractionJob
 from app.models.upload import Upload
-from app.schemas.extraction import DebugArtifacts, ExtractionArtifacts, ExtractionJobResponse
+from app.schemas.extraction import ExtractionArtifacts, ExtractionJobResponse
 from app.schemas.puzzle import PuzzleDraft
 from app.services.cv_extract import extract_board
 
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/extractions", tags=["extractions"])
 
 
 @router.post("/{upload_id}", response_model=ExtractionJobResponse, status_code=status.HTTP_201_CREATED)
-def create_extraction_job(upload_id: str, debug: bool = False, db: Session = Depends(get_db)) -> ExtractionJobResponse:
+def create_extraction_job(upload_id: str, db: Session = Depends(get_db)) -> ExtractionJobResponse:
     upload = db.get(Upload, upload_id)
     if upload is None:
         raise HTTPException(status_code=404, detail="Upload not found.")
@@ -32,7 +32,6 @@ def create_extraction_job(upload_id: str, debug: bool = False, db: Session = Dep
         str(artifacts_dir),
         board_width=upload.board_width,
         board_height=upload.board_height,
-        debug=debug,
     )
 
     draft = PuzzleDraft(
@@ -46,15 +45,12 @@ def create_extraction_job(upload_id: str, debug: bool = False, db: Session = Dep
     raw_result = {
         "board_bbox": list(extraction.board_bbox) if extraction.board_bbox else None,
         "warped_board_path": extraction.warped_board_path,
-        "debug_enabled": extraction.debug_enabled,
-        "debug_artifacts": extraction.debug_artifacts,
     }
 
     job = ExtractionJob(
         id=job_id,
         upload_id=upload.id,
-        candidate_sequence=None,
-        candidate_file_path=None,
+
         status=status_value,
         overall_confidence=extraction.confidence,
         raw_result_json=json.dumps(raw_result),
@@ -79,8 +75,6 @@ def create_extraction_job(upload_id: str, debug: bool = False, db: Session = Dep
             board_bbox=list(extraction.board_bbox) if extraction.board_bbox else None,
             warped_board_path=extraction.warped_board_path,
         ),
-        debug_enabled=extraction.debug_enabled,
-        debug_artifacts=DebugArtifacts.model_validate(extraction.debug_artifacts) if extraction.debug_artifacts else None,
     )
 
 
@@ -109,6 +103,4 @@ def get_extraction_job(job_id: str, db: Session = Depends(get_db)) -> Extraction
             board_bbox=raw_result.get("board_bbox"),
             warped_board_path=raw_result.get("warped_board_path"),
         ),
-        debug_enabled=raw_result.get("debug_enabled", False),
-        debug_artifacts=DebugArtifacts.model_validate(raw_result["debug_artifacts"]) if raw_result.get("debug_artifacts") else None,
     )

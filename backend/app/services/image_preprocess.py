@@ -7,12 +7,7 @@ import numpy as np
 
 @dataclass
 class PreprocessStages:
-    grayscale: np.ndarray
-    blurred: np.ndarray
-    enhanced: np.ndarray
-    sharpened: np.ndarray
     edges: np.ndarray
-    board_mask: np.ndarray
 
 
 def load_image(image_path: str) -> np.ndarray:
@@ -53,47 +48,12 @@ def build_edge_map(image: np.ndarray) -> np.ndarray:
     return cleaned
 
 
-def build_board_mask(image: np.ndarray) -> np.ndarray:
-    background_level = int(np.median(np.concatenate((image[0, :], image[-1, :], image[:, 0], image[:, -1]))))
-    threshold_value = max(0, min(255, background_level - 12))
-    global_mask = cv2.threshold(image, threshold_value, 255, cv2.THRESH_BINARY_INV)[1]
-    adaptive_mask = cv2.adaptiveThreshold(
-        image,
-        255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY_INV,
-        31,
-        4,
-    )
-    mask = cv2.bitwise_or(global_mask, adaptive_mask)
-
-    close_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (19, 19))
-    open_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, close_kernel)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, open_kernel)
-    return mask
-
-
 def build_preprocess_stages(image: np.ndarray) -> PreprocessStages:
     gray = to_grayscale(image)
     blurred = denoise_image(gray)
     enhanced = enhance_contrast(blurred)
     sharpened = sharpen_image(enhanced)
     edges = build_edge_map(sharpened)
-    board_mask = build_board_mask(sharpened)
     return PreprocessStages(
-        grayscale=gray,
-        blurred=blurred,
-        enhanced=enhanced,
-        sharpened=sharpened,
         edges=edges,
-        board_mask=board_mask,
     )
-
-
-def edge_map(image: np.ndarray) -> np.ndarray:
-    return build_preprocess_stages(image).edges
-
-
-def board_mask_map(image: np.ndarray) -> np.ndarray:
-    return build_preprocess_stages(image).board_mask
