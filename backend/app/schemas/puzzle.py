@@ -15,3 +15,13 @@ class PuzzleDraft(BaseModel):
     board_rows: list[str]
     patches: list[PatchDefinition]
 
+
+class PuzzleExtractionResponse(BaseModel):
+    puzzle_number: int
+    board_width: int = Field(ge=1)
+    board_height: int = Field(ge=1)
+    status: str
+    confidence: float | None = None
+    board_bbox: list[int] | None = None
+    board_path: str | None = None
+

@@ -11,7 +11,7 @@ from app.services.layout_detect import crop_board_region, detect_board_candidate
 class BoardExtractionResult:
     confidence: float
     board_bbox: tuple[int, int, int, int] | None
-    warped_board_path: str | None
+    board_path: str | None
 
 
 def extract_board(
@@ -33,7 +33,7 @@ def extract_board(
         return BoardExtractionResult(
             confidence=0.0,
             board_bbox=None,
-            warped_board_path=None,
+            board_path=None,
         )
 
     board = crop_board_region(
@@ -43,11 +43,11 @@ def extract_board(
         expected_height=board_height,
     )
     artifacts_path.mkdir(parents=True, exist_ok=True)
-    warped_board_path = str(artifacts_path / "board.png")
-    cv2.imwrite(warped_board_path, board)
+    board_path = str(artifacts_path / "board.png")
+    cv2.imwrite(board_path, board)
 
     return BoardExtractionResult(
         confidence=candidate.score,
         board_bbox=candidate.bbox,
-        warped_board_path=warped_board_path,
+        board_path=board_path,
     )

@@ -17,8 +17,8 @@ def test_extract_board(tmp_path):
         board_height=entry["board_height"],
     )
 
-    assert result.warped_board_path is not None
-    assert Path(result.warped_board_path).exists()
+    assert result.board_path is not None
+    assert Path(result.board_path).exists()
     assert result.board_bbox is not None
 
     x, y, w, h = result.board_bbox
@@ -30,7 +30,7 @@ def test_extract_board(tmp_path):
     assert abs(w - h) < 120
     assert abs(center_x - 540) < 40
 
-    crop = cv2.imread(result.warped_board_path)
+    crop = cv2.imread(result.board_path)
     assert crop is not None
     height, width = crop.shape[:2]
     assert abs((width / height) - (entry["board_width"] / entry["board_height"])) < 0.05
