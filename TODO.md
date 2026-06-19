@@ -5,8 +5,9 @@
 - [x] `POST /puzzles` — 이미지 업로드 + 보드 영역 crop 단일 엔드포인트
 - [x] CV 전처리 파이프라인 (grayscale → blur → CLAHE → sharpen → edge)
 - [x] contour 기반 보드 후보 탐지 및 스코어링
-- [ ] **OCR**: 잘라낸 보드 이미지에서 셀 영역 분할 및 문자 인식
-- [ ] **셀 데이터 추출**: 개별 셀 이미지 → patch size/shape 분류
+- [x] **Step 1 — 셀 위치 파악**: 균등 분할 → HSV Saturation 으로 유색 cell 만 선별
+- [ ] **Step 2 — 셀 안 사각형 모양 파악**: wide/tall/square/any 분류
+- [ ] **Step 3 — 숫자 파악**: 셀 내 숫자 OCR → size 추출
 - [ ] **구조화된 JSON 응답**: `POST /puzzles` 가 cells 배열을 포함한 `PuzzleDraft` JSON 반환
 
 ```json
