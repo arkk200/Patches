@@ -1,14 +1,18 @@
-from app.services.path_builder import (
-    build_candidate_patches_path,
-    build_final_patches_path,
-)
+from pathlib import Path
+
+from app.config import settings
+from app.services.path_builder import build_upload_image_path
 
 
-def test_build_candidate_patches_path():
-    path = build_candidate_patches_path(22, 1)
-    assert path.endswith("22-1.patches")
+class TestBuildUploadImagePath:
+    def test_default_extension(self) -> None:
+        upload_id = "puz_abc123"
+        result = build_upload_image_path(upload_id)
+        expected = str(Path(settings.uploads_dir) / f"{upload_id}.png")
+        assert result == expected
 
-
-def test_build_final_patches_path():
-    path = build_final_patches_path(22)
-    assert path.endswith("22.patches")
+    def test_custom_extension(self) -> None:
+        upload_id = "puz_def456"
+        result = build_upload_image_path(upload_id, extension=".jpeg")
+        expected = str(Path(settings.uploads_dir) / f"{upload_id}.jpeg")
+        assert result == expected

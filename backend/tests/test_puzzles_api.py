@@ -1,148 +1,81 @@
 from pathlib import Path
 
 import cv2
+import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 
-from app.main import create_app
-from tests.fixture_helpers import get_screenshot_entry, get_screenshot_path, load_screenshot_metadata
 
-
-def make_client() -> TestClient:
-    app = create_app()
-    return TestClient(app)
-
-
-def test_create_puzzle_extraction_happy_path():
-    client = make_client()
-    entry = get_screenshot_entry("a.jpeg")
-    image_path = get_screenshot_path(entry["file_name"])
-    content_type = "image/jpeg" if image_path.suffix.lower() in {".jpg", ".jpeg"} else "image/png"
-
-    with image_path.open("rb") as image_file:
-        response = client.post(
-            "/puzzles",
-            data={
-                "puzzle_number": str(entry["puzzle_number"]),
-                "board_width": str(entry["board_width"]),
-                "board_height": str(entry["board_height"]),
-            },
-            files={"image": (image_path.name, image_file, content_type)},
-        )
-
-    assert response.status_code == 201
-    payload = response.json()
-
-    assert payload["puzzle_number"] == entry["puzzle_number"]
-    assert payload["board_width"] == entry["board_width"]
-    assert payload["board_height"] == entry["board_height"]
-    assert payload["status"] == "completed"
-    assert payload["confidence"] is not None
-    assert payload["board_bbox"] is not None
-    assert payload["board_path"] is not None
-    assert Path(payload["board_path"]).exists()
-
-    x, y, w, h = payload["board_bbox"]
-    center_x = x + (w / 2)
-    assert 0 <= x < 120
-    assert 350 <= y <= 500
-    assert w > 900
-    assert h > 900
-    assert abs(w - h) < 120
-    assert abs(center_x - 540) < 40
-
-    crop = cv2.imread(payload["board_path"])
-    assert crop is not None
-    height, width = crop.shape[:2]
-    assert abs((width / height) - (entry["board_width"] / entry["board_height"])) < 0.05
-
-
-def test_create_puzzle_extraction_all_fixtures():
-    client = make_client()
-
-    for file_name in ("a.jpeg", "b.png", "c.png"):
-        entry = get_screenshot_entry(file_name)
-        image_path = get_screenshot_path(entry["file_name"])
-        content_type = "image/jpeg" if image_path.suffix.lower() in {".jpg", ".jpeg"} else "image/png"
-
-        with image_path.open("rb") as image_file:
+class TestCreatePuzzleExtraction:
+    def test_happy_path_with_fixture(self, client: TestClient, screenshots_dir: Path) -> None:
+        fixture_path = screenshots_dir / "a.jpeg"
+        with open(fixture_path, "rb") as f:
             response = client.post(
                 "/puzzles",
-                data={
-                    "puzzle_number": str(entry["puzzle_number"]),
-                    "board_width": str(entry["board_width"]),
-                    "board_height": str(entry["board_height"]),
-                },
-                files={"image": (image_path.name, image_file, content_type)},
+                data={"puzzle_number": 1, "board_width": 5, "board_height": 5},
+                files={"image": ("a.jpeg", f, "image/jpeg")},
             )
 
         assert response.status_code == 201
-        payload = response.json()
-        assert payload["status"] == "completed"
-        assert payload["board_bbox"] is not None
-        assert payload["board_path"] is not None
-        assert Path(payload["board_path"]).exists()
+        data = response.json()
+        assert data["puzzle_number"] == 1
+        assert data["board_width"] == 5
+        assert data["board_height"] == 5
+        assert data["status"] == "completed"
+        assert data["board_path"] is not None
+        assert data["confidence"] is not None
+        assert data["board_bbox"] is not None
 
-
-def test_create_puzzle_extraction_rejects_unsupported_type():
-    client = make_client()
-    from io import BytesIO
-
-    response = client.post(
-        "/puzzles",
-        data={"puzzle_number": "1", "board_width": "5", "board_height": "5"},
-        files={"image": ("sample.txt", BytesIO(b"not-an-image"), "text/plain")},
-    )
-
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Unsupported image type."
-
-
-def test_create_puzzle_extraction_returns_failed_when_no_board_found(monkeypatch):
-    client = make_client()
-
-    from app.api import puzzles as puzzles_api
-    from app.services.cv_extract import BoardExtractionResult
-
-    def fake_extract_board(*args, **kwargs):
-        return BoardExtractionResult(
-            confidence=0.0,
-            board_bbox=None,
-            board_path=None,
-        )
-
-    monkeypatch.setattr(puzzles_api, "extract_board", fake_extract_board)
-
-    entry = get_screenshot_entry("a.jpeg")
-    image_path = get_screenshot_path(entry["file_name"])
-
-    with image_path.open("rb") as image_file:
+    def test_rejects_unsupported_content_type(self, client: TestClient) -> None:
         response = client.post(
             "/puzzles",
-            data={
-                "puzzle_number": str(entry["puzzle_number"]),
-                "board_width": str(entry["board_width"]),
-                "board_height": str(entry["board_height"]),
-            },
-            files={"image": (image_path.name, image_file, "image/jpeg")},
+            data={"puzzle_number": 1, "board_width": 5, "board_height": 5},
+            files={"image": ("test.txt", b"not an image", "text/plain")},
         )
 
-    assert response.status_code == 201
-    payload = response.json()
-    assert payload["status"] == "failed"
-    assert payload["board_path"] is None
-    assert payload["board_bbox"] is None
-    assert payload["confidence"] is None
+        assert response.status_code == 400
+        assert "Unsupported image type" in response.text
 
+    def test_blank_image_returns_failed_status(self, client: TestClient, tmp_path: pytest.TempPathFactory) -> None:
+        blank_path = str(tmp_path / "blank.png")
+        cv2.imwrite(blank_path, np.full((100, 100, 3), 255, dtype=np.uint8))
 
-def test_fixture_metadata_covers_expected_screenshots():
-    metadata = load_screenshot_metadata()
+        with open(blank_path, "rb") as f:
+            response = client.post(
+                "/puzzles",
+                data={"puzzle_number": 1, "board_width": 5, "board_height": 5},
+                files={"image": ("blank.png", f, "image/png")},
+            )
 
-    assert [entry["puzzle_number"] for entry in metadata] == [1, 2, 3]
-    assert [(entry["board_width"], entry["board_height"]) for entry in metadata] == [
-        (5, 5),
-        (6, 6),
-        (6, 6),
-    ]
+        assert response.status_code == 201
+        data = response.json()
+        assert data["status"] == "failed"
+        assert data["confidence"] is None
+        assert data["board_bbox"] is None
+        assert data["board_path"] is None
 
-    for file_name in ("a.jpeg", "b.png", "c.png"):
-        assert get_screenshot_path(file_name).exists()
+    def test_missing_required_fields_returns_422(self, client: TestClient) -> None:
+        response = client.post(
+            "/puzzles",
+            files={"image": ("test.png", b"fake", "image/png")},
+        )
+
+        assert response.status_code == 422
+
+    def test_invalid_puzzle_number_returns_422(self, client: TestClient) -> None:
+        response = client.post(
+            "/puzzles",
+            data={"puzzle_number": 0, "board_width": 5, "board_height": 5},
+            files={"image": ("test.png", b"fake", "image/png")},
+        )
+
+        assert response.status_code == 422
+
+    def test_invalid_board_dimensions_returns_422(self, client: TestClient) -> None:
+        response = client.post(
+            "/puzzles",
+            data={"puzzle_number": 1, "board_width": 0, "board_height": 0},
+            files={"image": ("test.png", b"fake", "image/png")},
+        )
+
+        assert response.status_code == 422

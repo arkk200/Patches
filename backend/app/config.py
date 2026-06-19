@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./patches.db"
 
     uploads_dir: str = str(BASE_DIR / "storage" / "uploads")
-    generated_patches_dir: str = str(BASE_DIR / "storage" / "generated-patches")
     artifacts_dir: str = str(BASE_DIR / "storage" / "artifacts")
 
     model_config = SettingsConfigDict(
