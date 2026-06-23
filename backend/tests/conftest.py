@@ -12,6 +12,7 @@ from app.main import create_app
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SCREENSHOTS_DIR = FIXTURES_DIR / "screenshots"
+PUZZLES_DIR = FIXTURES_DIR / "puzzles"
 
 
 @pytest.fixture(autouse=True)
@@ -31,6 +32,11 @@ def fixtures_metadata() -> list[dict]:
 @pytest.fixture(scope="session")
 def screenshots_dir() -> Path:
     return SCREENSHOTS_DIR
+
+
+@pytest.fixture(scope="session")
+def puzzles_dir() -> Path:
+    return PUZZLES_DIR
 
 
 @pytest.fixture
