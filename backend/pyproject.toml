@@ -12,6 +12,7 @@ dependencies = [
   "alembic",
   "python-multipart",
   "opencv-python-headless",
+  "pytesseract",
   "numpy",
 ]
 

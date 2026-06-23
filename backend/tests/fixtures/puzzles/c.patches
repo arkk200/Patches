@@ -1,0 +1,15 @@
+6x6
+.a..b.
+......
+...c.d
+e.f...
+......
+.g..h.
+a:4:square
+b:4:square
+c:4:none
+d:3:none
+e:6:none
+f:2:none
+g:4:square
+h:9:square

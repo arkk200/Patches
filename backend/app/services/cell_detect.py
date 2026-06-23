@@ -9,7 +9,7 @@ class CellShape(StrEnum):
     WIDE = "wide"
     TALL = "tall"
     SQUARE = "square"
-    ANY = "any"
+    NONE = "none"
 
 
 SATURATION_THRESHOLD = 25
@@ -25,6 +25,7 @@ class CellSegment:
     col: int
     cell_image: np.ndarray
     shape: CellShape | None = None
+    size: int | None = None
 
 
 def _cell_has_color(cell_image: np.ndarray) -> bool:
@@ -59,7 +60,7 @@ def segment_cells(
     return cells
 
 
-def _classify_cell_shape(cell_image: np.ndarray) -> CellShape:
+def _extract_patch_ratio(cell_image: np.ndarray) -> float | None:
     hsv = cv2.cvtColor(cell_image, cv2.COLOR_BGR2HSV)
     sat = hsv[:, :, 1]
     _, mask = cv2.threshold(sat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -69,15 +70,21 @@ def _classify_cell_shape(cell_image: np.ndarray) -> CellShape:
 
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        return CellShape.ANY
+        return None
 
     all_pts = np.vstack(contours)
     _, _, w, h = cv2.boundingRect(all_pts)
 
     if w <= MIN_SHAPE_DIMENSION or h <= MIN_SHAPE_DIMENSION:
-        return CellShape.ANY
+        return None
 
-    ratio = w / h
+    return w / h
+
+
+def _classify_cell_shape(cell_image: np.ndarray) -> CellShape:
+    ratio = _extract_patch_ratio(cell_image)
+    if ratio is None:
+        return CellShape.NONE
     if ratio >= SHAPE_RATIO_WIDE:
         return CellShape.WIDE
     if ratio <= SHAPE_RATIO_TALL:
