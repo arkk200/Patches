@@ -130,7 +130,7 @@ class TestParsePatches:
         assert len(result.patches) == 1
 
     def test_empty_content_raises(self) -> None:
-        with pytest.raises(IndexError):
+        with pytest.raises(ValueError, match="empty"):
             parse_patches("")
 
     def test_malformed_size_line_raises(self) -> None:
@@ -144,7 +144,7 @@ class TestParsePatches:
 ...
 ...
 x:5:wide"""
-        with pytest.raises(KeyError):
+        with pytest.raises(ValueError, match="not on board"):
             parse_patches(content)
 
     def test_zero_size_raises_validation_error(self) -> None:

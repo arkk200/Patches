@@ -42,12 +42,15 @@ def create_puzzle_extraction(
         board_height=board_height,
     )
 
+    if not result.board_path:
+        output_path.unlink(missing_ok=True)
+
     return PuzzleExtractionResponse(
         puzzle_number=puzzle_number,
         board_width=board_width,
         board_height=board_height,
         status="completed" if result.board_path else "failed",
         confidence=result.confidence if result.board_path else None,
-        board_bbox=list(result.board_bbox) if result.board_bbox else None,
+        board_bbox=result.board_bbox,
         board_path=result.board_path,
     )

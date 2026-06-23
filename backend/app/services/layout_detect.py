@@ -7,6 +7,22 @@ import numpy as np
 from app.services.image_preprocess import build_preprocess_stages
 
 
+# ── Board detection tuning thresholds ──────────────────────────────────────
+MIN_BOARD_AREA_FRACTION = 0.015      # Ignore candidates smaller than this
+PLAUSIBLE_AREA_FRACTION = 0.3        # Expected minimum board area
+ASPECT_TOLERANCE = 0.45              # Allowed deviation from expected ratio
+SMALL_CANDIDATE_AREA_FRACTION = 0.2  # Aspect check only for small candidates
+MIN_ASPECT_RATIO = 0.35
+MAX_ASPECT_RATIO = 1.8
+EDGE_MARGIN_FRACTION = 0.1           # Board must not touch image edges
+MAX_MERGE_CONTOURS = 6               # Max contours to try merging
+
+# Scoring weights (tuned empirically)
+X_CENTER_WEIGHT = 0.29
+AREA_WEIGHT = 0.35
+ASPECT_WEIGHT = 0.36
+
+
 @dataclass
 class BoardCandidate:
     bbox: tuple[int, int, int, int]
@@ -53,21 +69,19 @@ def _score_candidate(
     image_area = image_height * image_width
 
     center_x = x + (w / 2)
-    center_y = y + (h / 2)
     x_center_score = max(0.0, 1.0 - (abs(center_x - (image_width / 2)) / max(image_width / 2, 1)))
-    y_center_score = max(0.0, 1.0 - (abs(center_y - (image_height / 2)) / max(image_height / 2, 1)))
 
-    area_score = min(1.0, (w * h) / max(image_area * 0.3, 1))
+    area_score = min(1.0, (w * h) / max(image_area * PLAUSIBLE_AREA_FRACTION, 1))
     bbox_ratio = w / max(h, 1)
     aspect_score = 1.0
     if expected_ratio is not None:
         aspect_score = max(0.0, 1.0 - (abs(bbox_ratio - expected_ratio) / max(expected_ratio, 1e-6)))
 
+    # Board detection scoring weights
     return (
-        (x_center_score * 0.27)
-        + (y_center_score * 0.08)
-        + (area_score * 0.32)
-        + (aspect_score * 0.33)
+        (x_center_score * X_CENTER_WEIGHT)
+        + (area_score * AREA_WEIGHT)
+        + (aspect_score * ASPECT_WEIGHT)
     )
 
 
@@ -107,15 +121,15 @@ def _candidate_is_plausible(
     x, y, w, h = candidate.bbox
     bbox_area = w * h
     image_area = image_height * image_width
-    if bbox_area < image_area * 0.015:
+    if bbox_area < image_area * MIN_BOARD_AREA_FRACTION:
         return False
 
     bbox_ratio = w / max(h, 1)
-    if expected_ratio is not None and abs(bbox_ratio - expected_ratio) > 0.45 and bbox_area < image_area * 0.2:
+    if expected_ratio is not None and abs(bbox_ratio - expected_ratio) > ASPECT_TOLERANCE and bbox_area < image_area * SMALL_CANDIDATE_AREA_FRACTION:
         return False
-    if not 0.35 <= bbox_ratio <= 1.8:
+    if not MIN_ASPECT_RATIO <= bbox_ratio <= MAX_ASPECT_RATIO:
         return False
-    if x + w <= image_width * 0.1 or x >= image_width * 0.9:
+    if x + w <= image_width * EDGE_MARGIN_FRACTION or x >= image_width * (1 - EDGE_MARGIN_FRACTION):
         return False
     return True
 
@@ -144,7 +158,7 @@ def _collect_candidates(
         candidates.append(candidate)
         plausible_contours.append(contour)
 
-    max_merge_inputs = min(6, len(plausible_contours))
+    max_merge_inputs = min(MAX_MERGE_CONTOURS, len(plausible_contours))
     for size in range(2, max_merge_inputs + 1):
         for grouped_contours in combinations(plausible_contours[:max_merge_inputs], size):
             merged_candidate = _build_candidate_from_contours(
