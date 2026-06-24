@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 
-class CellShape(StrEnum):
+class PatchShape(StrEnum):
     WIDE = "wide"
     TALL = "tall"
     SQUARE = "square"
@@ -21,30 +21,30 @@ MIN_SHAPE_DIMENSION = 2
 
 
 @dataclass
-class CellSegment:
+class PatchSegment:
     row: int
     col: int
     cell_image: np.ndarray
-    shape: CellShape | None = None
+    shape: PatchShape | None = None
     size: int | None = None
 
 
-def _cell_has_color(cell_image: np.ndarray) -> bool:
+def _patch_has_color(cell_image: np.ndarray) -> bool:
     hsv = cv2.cvtColor(cell_image, cv2.COLOR_BGR2HSV)
     mean_saturation = hsv[:, :, 1].mean()
     return mean_saturation > SATURATION_THRESHOLD
 
 
-def segment_cells(
+def segment_patches(
     board_image: np.ndarray,
     board_width: int,
     board_height: int,
-) -> list[CellSegment]:
+) -> list[PatchSegment]:
     img_h, img_w = board_image.shape[:2]
     cell_h = img_h // board_height
     cell_w = img_w // board_width
 
-    cells: list[CellSegment] = []
+    cells: list[PatchSegment] = []
 
     for row in range(board_height):
         for col in range(board_width):
@@ -55,8 +55,8 @@ def segment_cells(
 
             cell = board_image[y1:y2, x1:x2].copy()
 
-            if _cell_has_color(cell):
-                cells.append(CellSegment(row=row, col=col, cell_image=cell))
+            if _patch_has_color(cell):
+                cells.append(PatchSegment(row=row, col=col, cell_image=cell))
 
     return cells
 
@@ -82,10 +82,10 @@ def _extract_patch_ratio(cell_image: np.ndarray) -> float | None:
     return w / h
 
 
-def _classify_cell_shape(cell_image: np.ndarray) -> CellShape:
+def _classify_patch_shape(cell_image: np.ndarray) -> PatchShape:
     ratio = _extract_patch_ratio(cell_image)
     if ratio is None:
-        return CellShape.CROSS
+        return PatchShape.CROSS
 
     # Build Otsu mask (shared with _extract_patch_ratio but cheap so dup OK)
     cell_h, cell_w = cell_image.shape[:2]
@@ -119,22 +119,22 @@ def _classify_cell_shape(cell_image: np.ndarray) -> CellShape:
                     1 for c in corners if np.sum(c > 0) / c.size < 0.3
                 )
                 if empty_corners >= 3:  # 항상 4일테지만, 혹시 모를 노이즈 티오 1개 허용
-                    return CellShape.CROSS
+                    return PatchShape.CROSS
 
     if ratio >= SHAPE_RATIO_WIDE:
-        return CellShape.WIDE
+        return PatchShape.WIDE
     if ratio <= SHAPE_RATIO_TALL:
-        return CellShape.TALL
-    return CellShape.SQUARE
+        return PatchShape.TALL
+    return PatchShape.SQUARE
 
 
-def classify_cell_shapes(cells: list[CellSegment]) -> list[CellSegment]:
+def classify_patch_shapes(cells: list[PatchSegment]) -> list[PatchSegment]:
     return [
-        CellSegment(
+        PatchSegment(
             row=c.row,
             col=c.col,
             cell_image=c.cell_image,
-            shape=_classify_cell_shape(c.cell_image),
+            shape=_classify_patch_shape(c.cell_image),
         )
         for c in cells
     ]

@@ -1,17 +1,22 @@
 from pathlib import Path
 from uuid import uuid4
 
+import cv2
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from app.config import settings
-from app.schemas.puzzle import PuzzleExtractionResponse
+from app.schemas.puzzle import PatchDefinition, PuzzleExtractionResponse
 from app.services.cv_extract import extract_board
+from app.services.patch_detect import segment_patches, classify_patch_shapes
+from app.services.patch_ocr import extract_patch_sizes
 from app.services.path_builder import build_upload_image_path
 
 
 router = APIRouter(prefix="/puzzles", tags=["puzzles"])
 
 ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
+
+_READING_ORDER_LETTERS = "abcdefghijklmnopqrstuvwxyz"
 
 
 @router.post("", response_model=PuzzleExtractionResponse, status_code=status.HTTP_201_CREATED)
@@ -42,7 +47,24 @@ def create_puzzle_extraction(
         board_height=board_height,
     )
 
-    if not result.board_path:
+    patches: list[PatchDefinition] = []
+    if result.board_path:
+        board = cv2.imread(result.board_path)
+        cells = segment_patches(board, board_width, board_height)
+        cells = classify_patch_shapes(cells)
+        cells = extract_patch_sizes(cells)
+        for i, cell in enumerate(cells):
+            letter = _READING_ORDER_LETTERS[i] if i < 26 else f"p{i}"
+            patches.append(
+                PatchDefinition(
+                    id=letter,
+                    row=cell.row,
+                    col=cell.col,
+                    size=cell.size,
+                    shape=cell.shape,
+                )
+            )
+    else:
         output_path.unlink(missing_ok=True)
 
     return PuzzleExtractionResponse(
@@ -50,7 +72,5 @@ def create_puzzle_extraction(
         board_width=board_width,
         board_height=board_height,
         status="completed" if result.board_path else "failed",
-        confidence=result.confidence if result.board_path else None,
-        board_bbox=result.board_bbox,
-        board_path=result.board_path,
+        patches=patches,
     )

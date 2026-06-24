@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pytesseract
 
-from app.services.cell_detect import CellSegment
+from app.services.patch_detect import PatchSegment
 
 if TYPE_CHECKING:
     import easyocr
@@ -122,7 +122,7 @@ def _easy_ocr(cell_image: np.ndarray) -> int | None:
     return digits[0][0]
 
 
-def _extract_cell_size(cell_image: np.ndarray) -> int | None:
+def _extract_patch_size(cell_image: np.ndarray) -> int | None:
     results: set[int] = set()
 
     sat_val = _sat_ocr(cell_image)
@@ -138,14 +138,14 @@ def _extract_cell_size(cell_image: np.ndarray) -> int | None:
     return _pick_best_ocr_result(results, easy_val)
 
 
-def extract_cell_sizes(cells: list[CellSegment]) -> list[CellSegment]:
+def extract_patch_sizes(cells: list[PatchSegment]) -> list[PatchSegment]:
     return [
-        CellSegment(
+        PatchSegment(
             row=c.row,
             col=c.col,
             cell_image=c.cell_image,
             shape=c.shape,
-            size=_extract_cell_size(c.cell_image),
+            size=_extract_patch_size(c.cell_image),
         )
         for c in cells
     ]

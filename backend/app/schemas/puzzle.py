@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.services.cell_detect import CellShape
+from app.services.patch_detect import PatchShape
 
 
 class PatchDefinition(BaseModel):
@@ -8,7 +8,7 @@ class PatchDefinition(BaseModel):
     row: int = Field(ge=0)
     col: int = Field(ge=0)
     size: int | None = Field(default=None, ge=1)
-    shape: CellShape
+    shape: PatchShape
 
 
 class PuzzleDraft(BaseModel):
@@ -23,7 +23,5 @@ class PuzzleExtractionResponse(BaseModel):
     board_width: int
     board_height: int
     status: str
-    confidence: float | None = None
-    board_bbox: tuple[int, int, int, int] | None = None
-    board_path: str | None = None
+    patches: list[PatchDefinition]
 

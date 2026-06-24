@@ -6,9 +6,9 @@
 - [x] CV 전처리 파이프라인 (grayscale → blur → CLAHE → sharpen → edge)
 - [x] contour 기반 보드 후보 탐지 및 스코어링
 - [x] **Step 1 — 셀 위치 파악**: 균등 분할 → HSV Saturation 으로 유색 cell 만 선별
-- [x] **Step 2 — 셀 안 사각형 모양 파악**: wide/tall/square/none 분류
+- [x] **Step 2 — 셀 안 사각형 모양 파악**: wide/tall/square/cross 분류
 - [x] **Step 3 — 숫자 파악**: 셀 내 숫자 OCR → size 추출
-- [ ] **구조화된 JSON 응답**: `POST /puzzles` 가 cells 배열을 포함한 `PuzzleDraft` JSON 반환
+- [x] **구조화된 JSON 응답**: `POST /puzzles` 가 patches 배열을 포함한 `PuzzleDraft` JSON 반환
 
 ```json
 {
@@ -16,11 +16,9 @@
   "board_width": 5,
   "board_height": 5,
   "status": "completed",
-  "confidence": 0.92,
-  "board_bbox": [120, 80, 600, 600],
-  "cells": [
-    { "id": "a", "row": 0, "col": 2, "size": 5, "shape": "wide", "confidence": 0.95 },
-    { "id": "b", "row": 2, "col": 0, "size": 8, "shape": "tall", "confidence": 0.92 }
+  "patches": [
+    { "id": "a", "row": 0, "col": 2, "size": 5, "shape": "wide" },
+    { "id": "b", "row": 2, "col": 0, "size": 8, "shape": "tall" }
   ]
 }
 ```

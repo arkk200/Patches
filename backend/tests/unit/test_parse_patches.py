@@ -26,9 +26,9 @@ a...b
 .....
 d...e
 a:3:wide
-b:4:none
-c:8:none
-d:4:none
+b:4:cross
+c:8:cross
+d:4:cross
 e:6:tall"""
 
 SAMPLE_3 = """\
