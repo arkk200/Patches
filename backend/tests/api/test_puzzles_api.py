@@ -22,9 +22,15 @@ class TestCreatePuzzleExtraction:
         assert data["board_width"] == 5
         assert data["board_height"] == 5
         assert data["status"] == "completed"
-        assert data["board_path"] is not None
-        assert data["confidence"] is not None
-        assert data["board_bbox"] is not None
+        assert "patches" in data
+        assert isinstance(data["patches"], list)
+        assert len(data["patches"]) > 0
+        for patch in data["patches"]:
+            assert "id" in patch
+            assert "row" in patch
+            assert "col" in patch
+            assert "shape" in patch
+            assert patch["shape"] in ("wide", "tall", "square", "cross")
 
     def test_rejects_unsupported_content_type(self, client: TestClient) -> None:
         response = client.post(
@@ -50,9 +56,7 @@ class TestCreatePuzzleExtraction:
         assert response.status_code == 201
         data = response.json()
         assert data["status"] == "failed"
-        assert data["confidence"] is None
-        assert data["board_bbox"] is None
-        assert data["board_path"] is None
+        assert data["patches"] == []
 
     def test_missing_required_fields_returns_422(self, client: TestClient) -> None:
         response = client.post(
