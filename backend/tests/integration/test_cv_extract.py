@@ -11,9 +11,9 @@ from app.services.cv_extract import BoardExtractionResult, extract_board
 class TestExtractBoard:
     def test_with_fixture_screenshot(self, screenshots_dir: Path) -> None:
         image_path = str(screenshots_dir / "a.jpeg")
-        artifacts_dir = str(Path(settings.artifacts_dir) / "test_extract")
+        board_output_path = str(Path(settings.artifacts_dir) / "test_extract.png")
 
-        result = extract_board(image_path, artifacts_dir, board_width=5, board_height=5)
+        result = extract_board(image_path, board_output_path, board_width=5, board_height=5)
 
         assert isinstance(result, BoardExtractionResult)
         assert result.confidence > 0
@@ -27,8 +27,8 @@ class TestExtractBoard:
         blank = np.full((100, 100, 3), 255, dtype=np.uint8)
         cv2.imwrite(blank_path, blank)
 
-        artifacts_dir = str(tmp_path / "blank_artifact")
-        result = extract_board(blank_path, artifacts_dir, board_width=5, board_height=5)
+        board_output_path = str(tmp_path / "blank_artifact.png")
+        result = extract_board(blank_path, board_output_path, board_width=5, board_height=5)
 
         assert result.confidence == 0.0
         assert result.board_bbox is None

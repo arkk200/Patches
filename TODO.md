@@ -23,10 +23,9 @@
 }
 ```
 
-- [ ] **`.patches` 변환**: 위 JSON → `.patches` 텍스트 (기존 serialize_patches 활용)
-- [ ] `GET /puzzles/{extract_id}` — 추출 결과 JSON 조회 API
-- [ ] `GET /puzzles/{extract_id}/patches` — `.patches` 텍스트 다운로드 API
-- [ ] 보드 탐지 실패 시 fallback / 재시도 로직
+- [x] `GET /puzzles/{puzzle_number}` — 추출 결과 JSON 조회 API
+- [x] `GET /puzzles/{puzzle_number}/patches` — `.patches` 텍스트 다운로드 API
+- [x] **`.patches` 변환**: 위 JSON → `.patches` 텍스트 (기존 serialize_patches 활용) ← GET .../patches 에서 자동 변환
 
 ## 어드민 페이지 (직접 업로드)
 
