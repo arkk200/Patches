@@ -17,6 +17,18 @@
       "puzzle_number": 3,
       "board_width": 6,
       "board_height": 6
+    },
+    {
+      "file_name": "d.png",
+      "puzzle_number": 4,
+      "board_width": 7,
+      "board_height": 7
+    },
+    {
+      "file_name": "e.png",
+      "puzzle_number": 5,
+      "board_width": 8,
+      "board_height": 8
     }
   ]
 }
