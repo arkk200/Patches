@@ -77,12 +77,12 @@ class TestClassifyCellShapeSynthetic:
 
     def test_no_color_returns_none(self) -> None:
         cell = np.full((50, 50, 3), (255, 255, 255), dtype=np.uint8)
-        assert self._classify_via_api(cell) == CellShape.NONE, "white cell should be NONE"
+        assert self._classify_via_api(cell) == CellShape.CROSS, "white cell should be CROSS"
 
     def test_tiny_noise_returns_none(self) -> None:
         cell = np.full((50, 50, 3), (220, 220, 220), dtype=np.uint8)
         cell[24:26, 24:26] = (80, 160, 240)  # 2×2 — too small
-        assert self._classify_via_api(cell) == CellShape.NONE, "tiny noise should be NONE"
+        assert self._classify_via_api(cell) == CellShape.CROSS, "tiny noise should be CROSS"
 
 
 # ── OCR unit tests (synthetic) ─────────────────────────────────────────────
@@ -232,7 +232,7 @@ class TestClassifyCellShapesWithFixtures:
 
         for cell in cells:
             exp_shape = expected[(cell.row, cell.col)]
-            if exp_shape == CellShape.NONE:
+            if exp_shape == CellShape.CROSS:
                 continue
             assert cell.shape == exp_shape, (
                 f"{screenshot_name} ({cell.row},{cell.col}): "

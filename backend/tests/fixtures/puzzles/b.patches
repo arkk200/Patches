@@ -6,10 +6,10 @@ a.b.c.
 ......
 .f.g.h
 a:6:tall
-b:3:none
+b:3:cross
 c:5:tall
-d:6:none
-e:4:none
+d:6:cross
+e:4:cross
 f:3:tall
-g:3:none
+g:3:cross
 h:6:tall
